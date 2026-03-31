@@ -1,4 +1,0 @@
-(coq.theory
- (name FastSearch)
- (package coq-fastsearch)
- (plugins coq-fastsearch.plugin))

@@ -1,0 +1,5 @@
+-R theories FastSearch
+-I src
+-generate-meta-for-package coq-fastsearch
+src
+theories
