@@ -1,0 +1,3 @@
+(coq.theory
+ (name FastSearch)
+ (package coq-fastsearch))
