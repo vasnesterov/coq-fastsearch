@@ -14,3 +14,6 @@
   coq-core.parsing
   coq-core.gramlib
   coq-core.plugins.ltac))
+
+(coq.pp
+ (modules fastsearch_grammar))

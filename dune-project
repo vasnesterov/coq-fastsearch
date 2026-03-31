@@ -1,5 +1,5 @@
-(lang dune 3.13)
-(using coq 0.8)
+(lang dune 3.22)
+(using coq 0.7)
 (name coq-fastsearch)
 
 (generate_opam_files true)

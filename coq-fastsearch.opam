@@ -9,7 +9,7 @@ license: "LGPL-2.1-only"
 homepage: "https://github.com/YOUR_USER/coq-fastsearch"
 bug-reports: "https://github.com/YOUR_USER/coq-fastsearch/issues"
 depends: [
-  "dune" {>= "3.13"}
+  "dune" {>= "3.22"}
   "ocaml" {>= "4.14"}
   "coq" {>= "8.20"}
   "odoc" {with-doc}
@@ -29,3 +29,4 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/YOUR_USER/coq-fastsearch.git"
+x-maintenance-intent: ["(latest)"]

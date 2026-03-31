@@ -1,0 +1,93 @@
+(************************************************************************)
+(* FastSearch grammar extension                                         *)
+(* Grammar rules adapted from coq-core vernac/g_vernac.mlg (V8.20.1)   *)
+(************************************************************************)
+
+DECLARE PLUGIN "coq-fastsearch.plugin"
+
+{
+
+open Ltac_plugin
+open Pp
+open Vernacexpr
+
+let constr_pattern = Pcoq.Constr.constr_pattern
+let ne_string = Pcoq.Prim.ne_string
+let global = Pcoq.Constr.global
+
+(* Reproduce test_id_colon locally since G_vernac doesn't export it *)
+let test_id_colon =
+  let open Pcoq.Lookahead in
+  to_entry "fs_test_id_colon" begin
+    lk_ident >> lk_kw ":"
+  end
+
+(* Reproduce scope_delimiter locally *)
+
+let pr_fs_positive_search_mark _ _ _ _ = mt ()
+let pr_fs_search_where _ _ _ _ = mt ()
+let pr_fs_search_item _ _ _ _ = mt ()
+let pr_fs_search_query _ _ _ _ = mt ()
+let pr_fs_ne_in_or_out_modules _ _ _ _ = mt ()
+let pr_fs_search_queries _ _ _ _ = mt ()
+
+}
+
+(* --- Grammar entries, prefixed with fs_ to avoid collisions --- *)
+
+ARGUMENT EXTEND fs_positive_search_mark PRINTED BY { pr_fs_positive_search_mark }
+| [ "-" ] -> { false }
+| [ ] -> { true }
+END
+
+ARGUMENT EXTEND fs_search_where PRINTED BY { pr_fs_search_where }
+| [ "head" ] -> { (Anywhere, true) }
+| [ "hyp" ] -> { (InHyp, false) }
+| [ "concl" ] -> { (InConcl, false) }
+| [ "headhyp" ] -> { (InHyp, true) }
+| [ "headconcl" ] -> { (InConcl, true) }
+END
+
+ARGUMENT EXTEND fs_search_item PRINTED BY { pr_fs_search_item }
+| [ test_id_colon fs_search_where(where) ":" ne_string(s) ] ->
+    { SearchString (where,s,None) }
+| [ ne_string(s) ] ->
+    { SearchString ((Anywhere,false),s,None) }
+| [ test_id_colon fs_search_where(where) ":" constr_pattern(p) ] ->
+    { SearchSubPattern (where,p) }
+| [ constr_pattern(p) ] ->
+    { SearchSubPattern ((Anywhere,false),p) }
+END
+
+ARGUMENT EXTEND fs_search_query PRINTED BY { pr_fs_search_query }
+| [ fs_positive_search_mark(b) fs_search_item(s) ] -> { (b, SearchLiteral s) }
+| [ fs_positive_search_mark(b) "[" ne_fs_search_query_list(l) "]" ] -> { (b, SearchDisjConj [l]) }
+END
+
+ARGUMENT EXTEND fs_ne_in_or_out_modules PRINTED BY { pr_fs_ne_in_or_out_modules }
+| [ "inside" ne_global_list(l) ] -> { SearchInside l }
+| [ "in" ne_global_list(l) ] -> { SearchInside l }
+| [ "outside" ne_global_list(l) ] -> { SearchOutside l }
+END
+
+ARGUMENT EXTEND fs_search_queries PRINTED BY { pr_fs_search_queries }
+| [ fs_ne_in_or_out_modules(m) ] -> { ([], m) }
+| [ fs_search_query(s) fs_search_queries(l) ] ->
+    { let (sl,m) = l in (s::sl, m) }
+| [ ] -> { ([], SearchOutside []) }
+END
+
+(* --- The FastSearch command --- *)
+
+VERNAC COMMAND EXTEND FastSearch CLASSIFIED AS QUERY
+| ![ proof_query ] [ "FastSearch" fs_search_query(s) fs_search_queries(l) ] ->
+  { fun ~pstate ->
+    let sigma, env = Declare.Proof.get_current_context pstate in
+    let (sl, m) = l in
+    ComSearch.interp_search env sigma (Search (s::sl)) m }
+| [ "FastSearch" fs_search_query(s) fs_search_queries(l) ] ->
+  { let env = Global.env () in
+    let sigma = Evd.from_env env in
+    let (sl, m) = l in
+    ComSearch.interp_search env sigma (Search (s::sl)) m }
+END
