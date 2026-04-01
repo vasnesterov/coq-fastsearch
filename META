@@ -1,0 +1,8 @@
+
+package "plugin" (
+  requires = "coq-core.plugins.ltac"
+  archive(byte) = "fastsearch_plugin.cma"
+  archive(native) = "fastsearch_plugin.cmxa"
+  plugin(byte) = "fastsearch_plugin.cma"
+  plugin(native) = "fastsearch_plugin.cmxs"
+)

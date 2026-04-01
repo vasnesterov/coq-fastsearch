@@ -120,11 +120,26 @@ let () =
       optread  = (fun () -> !search_output_name_only);
       optwrite = (:=) search_output_name_only }
 
+let search_max_results = ref 30
+
+let () =
+  declare_int_option
+    { optstage = Summary.Stage.Interp;
+      optdepr  = None;
+      optkey   = ["FastSearch";"Max";"Results"];
+      optread  = (fun () -> Some !search_max_results);
+      optwrite = (fun n -> search_max_results := Option.default 30 n) }
+
 let interp_search env sigma s r =
   let r = interp_search_restriction r in
   let get_pattern c = snd (Constrintern.intern_constr_pattern env sigma c) in
   let warnlist = ref [] in
+  let count = ref 0 in
+  let limit = !search_max_results in
   let pr_search ref kind env sigma c =
+    if limit > 0 && !count >= limit then ()
+    else begin
+    incr count;
     let pr = pr_global ref in
     let pp = if !search_output_name_only
       then pr
@@ -141,6 +156,7 @@ let interp_search env sigma s r =
         hov 2 (pr ++ str":" ++ spc () ++ pc)
       end
     in Feedback.msg_notice pp
+    end
   in
   (match s with
   | SearchPattern c ->
