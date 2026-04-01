@@ -1,12 +1,8 @@
 opam-version: "2.0"
 name: "coq-fastsearch"
 version: "dev"
-synopsis: "Fast search command for Coq"
-description: """
-An isolated implementation of the Coq Search command with result limiting
-and prioritization. Provides the FastSearch vernacular command with the
-same syntax as the built-in Search.
-"""
+synopsis: "Faster search command for Coq"
+description: "Faster search command for Coq."
 maintainer: "Vasilii Nesterov"
 license: "LGPL-2.1-only"
 depends: [
